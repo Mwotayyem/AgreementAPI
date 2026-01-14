@@ -124,7 +124,7 @@ namespace AgreementAPI.Repositories
         {
             // Get Latest Item Record
             string sql = @"
-                SELECT TRN_ITEMBARCODE, TRN_ITEMPRICE, TRN_ITEMSHORTNAME, TRN_ITEMSTOP, TRN_SERIAL
+                SELECT TRN_ITEMBARCODE, TRN_ITEMPRICE, TRN_ITEMSHORTNAME, TRN_ITEMSTOP, TRN_SERIAL, TRN_TYPE_PRICE
                 FROM COMMDIV.MCEPOS_ITEMS 
                 WHERE TRN_ITEMCODE = :itemNo 
                 ORDER BY TRN_SERIAL DESC 
@@ -139,41 +139,37 @@ namespace AgreementAPI.Repositories
             
             if (await reader.ReadAsync())
             {
-                var trnSerial = reader.IsDBNull(4) ? 0 : reader.GetInt32(4); // Need to fetch TRN_SERIAL to log it
+                var trnSerial = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
                 var lastState = new ItemHistoryState
                 {
                     Barcode = reader.IsDBNull(0) ? null : reader.GetString(0),
                     Price = reader.IsDBNull(1) ? 0 : reader.GetDecimal(1),
                     Name = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    Stop = reader.IsDBNull(3) ? 0 : reader.GetInt32(3)
+                    Stop = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                    TypePrice = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
                 };
 
-                // Add log to message list? Not easily accessible here.
-                // We will rely on the return values affecting the main messages.
-                // But to help DEBUG, let's include this info in the Check results? 
-                // Or just assume the Logic is correct and the user has data. 
-                // Let's modify the SQL to fetch TRN_SERIAL to be sure.
-                Console.WriteLine($"Found existing item record: Serial {trnSerial}, Price {lastState.Price}");
-
-                // Compare logic
+                // Compare logic - Priority Order as implicit in requirements
                 if (newItem.ITEMSTOP == 1) return (true, 5, lastState); // STOP
+                
                 if (lastState.Barcode != newItem.BARCODE) return (true, 2, lastState); // BARCODE CHANGE
                 
-                // Debugging Price Change
-                if (lastState.Price != newItem.ITEMPRICE) 
+                // Name Change
+                if (lastState.Name != newItem.ITEMSHORTNAME) return (true, 4, lastState); 
+
+                // Price or TypePrice Change
+                // Note: User mentioned TRN_TYPE_PRICE change should be treated usually as price change logic or similar.
+                // Assuming Type 3 for price/type_price changes.
+                if (lastState.Price != newItem.ITEMPRICE || lastState.TypePrice != newItem.TRN_TYPE_PRICE) 
                 {
-                     // Found price change
                      return (true, 3, lastState); 
                 }
-                
-                if (lastState.Name != newItem.ITEMSHORTNAME) return (true, 4, lastState); // NAME CHANGE
                 
                 // If identical, do NOT insert
                 return (false, 0, lastState);
             }
 
             // No record found -> First Insert
-            Console.WriteLine("No existing item record found");
             return (true, 1, null);
         }
 
@@ -356,6 +352,7 @@ namespace AgreementAPI.Repositories
             public decimal Price { get; set; }
             public string? Name { get; set; }
             public int Stop { get; set; }
+            public int TypePrice { get; set; }
         }
     }
 }
