@@ -1,0 +1,26 @@
+{
+    "AGREEMENT_NO": "2020310193",
+    "ITEMS": [
+        {
+            "ITEMNO": "10691088",
+            "BARCODE": "6212900018694",
+            "ITEMSHORTNAME": "Nescafe",
+            "ITEMTAX": 16,
+            "ITEMPRICE": 1.75,
+            "ITEMSTOP": 0,
+            "TRN_TYPE_PRICE": 1
+        },
+        {
+            "ITEMNO": "10691088",
+            "BARCODE": "6212900018694",
+            "ITEMSHORTNAME": "Nescafe",
+            "ITEMTAX": 0,
+            "ITEMPRICE": 1.5,
+            "ITEMSTOP": 0,
+            "TRN_TYPE_PRICE": 8
+        }
+    ],
+    "COMP_CODE": "999494",
+    "AGR_STDATE": "25/01/2021",
+    "AGR_ENDATE": "24/01/2022"
+}
